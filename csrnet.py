@@ -132,13 +132,15 @@ def backend_D(f, weights = None):
     model = Model(f.input, x, name = "Transfer_learning_model")
     return (model)
 
-x = tf.placeholder(tf.float32, shape=[None, img_rows, img_cols, 3], name="input")
+iterator = input_data()
+images,labels = iterator.get_next()
+# print(images)
 
-base_model = applications.VGG16(input_tensor=x, weights='imagenet', include_top=False, input_shape=(256, 256, 3))
+base_model = applications.VGG16(input_tensor=images, weights='imagenet', include_top=False, input_shape=(256, 256, 3))
 BOTTLENECK_TENSOR_NAME = 'block4_conv3' # This is the 13th layer in VGG16
 
 f = create_non_trainable_model(base_model, BOTTLENECK_TENSOR_NAME) # Frontend
-
+# print(f)
 b_a = backend_A(f)
 
 global_step_tensor = tf.train.get_or_create_global_step()
@@ -147,6 +149,7 @@ with K_B.get_session() as sess:
 
     init = tf.global_variables_initializer()
     sess.run(init)
+    saver = tf.train.Saver()
     if exists(checkpt_dir):
         if tf.train.latest_checkpoint(checkpt_dir) is not None:
             tf.logging.info('Loading Checkpoint from '+ tf.train.latest_checkpoint(checkpt_dir))
@@ -154,8 +157,6 @@ with K_B.get_session() as sess:
     else:
         tf.logging.info('Training from Scratch -  No Checkpoint found')
     
-    # iterator = input_data()
-    # next_items = iterator.get_next()
-		
-	
-
+    while True:
+        test = sess.run(b_a.output)
+        print(test.shape)
