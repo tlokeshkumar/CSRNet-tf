@@ -1,5 +1,6 @@
 import argparse
 import tensorflow as tf
+import numpy as np
 from tensorflow.keras import backend as K_B
 from input_data import input_data
 from csrnet import create_full_model,loss_funcs
@@ -16,8 +17,10 @@ parser.add_argument("--load_ckpt",type = str,default=None,help="path to load che
 parser.add_argument("--save_freq",type = int,default=100,help="save frequency")
 parser.add_argument("--display_step",type = int,default=1,help="display frequency")
 parser.add_argument("--summary_freq",type = int,default=100,help="summary writer frequency")
+parser.add_argument("--no_epochs",type=int,default=10,help="number of epochs for training")
 
 args = parser.parse_args()
+no_iter_per_epoch = np.ceil(300/args.batch_size)
 
 TFRecord_file = args.input_record_file
 
@@ -30,7 +33,7 @@ if __name__ == '__main__':
     with tf.Graph().as_default():
         init = tf.global_variables_initializer()
     
-        iterator = input_data(TFRecord_file)
+        iterator = input_data(TFRecord_file,batch_size=args.batch_size)
         images,labels = iterator.get_next()
         labels_resized = tf.image.resize_images(labels,[28,28])
 
@@ -69,10 +72,12 @@ if __name__ == '__main__':
         else:
             tf.logging.info('Training from scratch')
 
-            
+        tf.logging.info('Training with Batch Size %d for %d epochs'%(args.batch_size,args.no_epochs))
+
         while True:    
         # Training Iterations Begin
             global_step,_ = sess.run([global_step_tensor,opA],options = runopts)
+            out_a = sess.run(model_A.output)
             if global_step%(args.display_step)==0:
                 loss_val = sess.run([loss_A],options = runopts)
                 tf.logging.info('Iteration: ' + str(global_step) + ' Loss: ' +str(loss_val))
@@ -84,3 +89,6 @@ if __name__ == '__main__':
             
             if global_step%(args.save_freq)==0:
                 saver.save(sess,args.ckpt_savedir,global_step=tf.train.get_global_step())
+            
+            if np.floor(global_step/no_iter_per_epoch) == args.no_epochs:
+                break
