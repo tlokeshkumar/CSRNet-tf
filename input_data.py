@@ -3,7 +3,6 @@ import os
 import numpy as np
 import cv2
 
-root = '/home/rishhanth/Documents/gen_codes/CSRNet-tf/train.tfrecords'
 batch_size = 1
 
 def parse_records(recordfile):
@@ -15,11 +14,11 @@ def parse_records(recordfile):
    
     return image,label
 
-def input_data():
-    train_dataset = tf.data.TFRecordDataset(root)
+def input_data(TFRecordfile = '/home/rishhanth/Documents/gen_codes/CSRNet-tf/train.tfrecords',batch_size = 8):
+    train_dataset = tf.data.TFRecordDataset(TFRecordfile)
     train_dataset = train_dataset.map(parse_records,num_parallel_calls=4)
     train_dataset = train_dataset.shuffle(100).repeat()
-    train_dataset = train_dataset.batch(8)
+    train_dataset = train_dataset.batch(batch_size)
     return train_dataset.make_one_shot_iterator()
 
 if __name__ == '__main__':

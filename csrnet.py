@@ -1,9 +1,6 @@
-import cv2
-import numpy as np 
 import tensorflow as tf 
-import numpy as np
-from tensorflow.python.keras import layers
-from tensorflow.python.keras.layers import (Activation, AveragePooling2D,
+from tensorflow.keras import layers
+from tensorflow.keras.layers import (Activation, AveragePooling2D,
                                             BatchNormalization, Conv2D, Conv3D,
                                             Dense, Flatten,
                                             GlobalAveragePooling2D,
@@ -11,17 +8,24 @@ from tensorflow.python.keras.layers import (Activation, AveragePooling2D,
                                             MaxPooling2D, MaxPooling3D,
                                             Reshape, Dropout, concatenate,
 											UpSampling2D)
-from tensorflow.python.keras import applications
-from tensorflow.python.keras.models import Model
-from tensorflow.python.keras import backend as K_B
-import coloredlogs
-from os.path import exists
-from input_data import input_data
-import os
+from tensorflow.keras import applications
+from tensorflow.keras.models import Model
+from tensorflow.keras import backend as K_B
 
-img_rows = 256
-img_cols = 256
-checkpt_dir = './train_ckpt'
+def variable_summaries(var):
+    """
+    Attach a lot of summaries to a Tensor (for TensorBoard visualization).
+    """
+    with tf.name_scope('summaries'):
+        mean = tf.reduce_mean(var)
+        tf.summary.scalar('mean', mean)
+        with tf.name_scope('stddev'):
+            stddev = tf.sqrt(tf.reduce_mean(tf.square(var - mean)))
+        tf.summary.scalar('stddev', stddev)
+        tf.summary.scalar('max', tf.reduce_max(var))
+        tf.summary.scalar('min', tf.reduce_min(var))
+        tf.summary.histogram('histogram', var)
+
 def create_non_trainable_model(base_model, BOTTLENECK_TENSOR_NAME, use_global_average = False):
     '''
     Parameters
@@ -61,7 +65,7 @@ def preprocess_input(x, data_format=None):
         Preprocessed tensor.
     """
     if data_format is None:
-        data_format = K.image_data_format()
+        data_format = K_B.image_data_format()
     assert data_format in {'channels_last', 'channels_first'}
 
     if data_format == 'channels_first':
@@ -132,31 +136,50 @@ def backend_D(f, weights = None):
     model = Model(f.input, x, name = "Transfer_learning_model")
     return (model)
 
-iterator = input_data()
-images,labels = iterator.get_next()
-# print(images)
+def create_full_model(input_images):
+    base_model = applications.VGG16(input_tensor=input_images, weights='imagenet', include_top=False, input_shape=(256, 256, 3))
+    BOTTLENECK_TENSOR_NAME = 'block4_conv3' # This is the 13th layer in VGG16
 
-base_model = applications.VGG16(input_tensor=images, weights='imagenet', include_top=False, input_shape=(256, 256, 3))
-BOTTLENECK_TENSOR_NAME = 'block4_conv3' # This is the 13th layer in VGG16
+    f = create_non_trainable_model(base_model, BOTTLENECK_TENSOR_NAME) # Frontend
+    b_a = backend_A(f)
+    b_b = backend_B(f)
+    b_c = backend_C(f)
+    b_d = backend_D(f)
 
-f = create_non_trainable_model(base_model, BOTTLENECK_TENSOR_NAME) # Frontend
-# print(f)
-b_a = backend_A(f)
+    return b_a,b_b,b_c,b_d
 
-global_step_tensor = tf.train.get_or_create_global_step()
-
-with K_B.get_session() as sess:
-
-    init = tf.global_variables_initializer()
-    sess.run(init)
-    saver = tf.train.Saver()
-    if exists(checkpt_dir):
-        if tf.train.latest_checkpoint(checkpt_dir) is not None:
-            tf.logging.info('Loading Checkpoint from '+ tf.train.latest_checkpoint(checkpt_dir))
-            saver.restore(sess, tf.train.latest_checkpoint(checkpt_dir))
-    else:
-        tf.logging.info('Training from Scratch -  No Checkpoint found')
+def loss_funcs(b_a,b_b,b_c,b_d,labels):
+    out_A = b_a.output
+    out_B = b_b.output
+    out_C = b_c.output
+    out_D = b_d.output
+    mse_a = tf.losses.mean_squared_error(out_A,labels)
+    mse_b = tf.losses.mean_squared_error(out_B,labels)
+    mse_c = tf.losses.mean_squared_error(out_C,labels)
+    mse_d = tf.losses.mean_squared_error(out_D,labels)
     
-    while True:
-        test = sess.run(b_a.output)
-        print(test.shape)
+    with tf.name_scope('loss_A'):
+        variable_summaries(mse_a)
+    
+    with tf.name_scope('loss_B'):
+        variable_summaries(mse_b)
+
+    with tf.name_scope('loss_C'):
+        variable_summaries(mse_c)
+
+    with tf.name_scope('loss_D'):
+        variable_summaries(mse_d)
+
+    with tf.name_scope('Predictions_A'):
+        variable_summaries(out_A)
+    
+    with tf.name_scope('Predictions_B'):
+        variable_summaries(out_B)
+
+    with tf.name_scope('Predictions_C'):
+        variable_summaries(out_A)
+
+    with tf.name_scope('Predictions_D'):
+        variable_summaries(out_A)
+
+    return mse_a,mse_b,mse_c,mse_d
