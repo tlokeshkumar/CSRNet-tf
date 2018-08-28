@@ -1,6 +1,6 @@
 import tensorflow as tf 
-from tensorflow.keras import layers
-from tensorflow.keras.layers import (Activation, AveragePooling2D,
+from tensorflow.python.keras import layers
+from tensorflow.python.keras.layers import (Activation, AveragePooling2D,
                                             BatchNormalization, Conv2D, Conv3D,
                                             Dense, Flatten,
                                             GlobalAveragePooling2D,
@@ -8,9 +8,9 @@ from tensorflow.keras.layers import (Activation, AveragePooling2D,
                                             MaxPooling2D, MaxPooling3D,
                                             Reshape, Dropout, concatenate,
 											UpSampling2D)
-from tensorflow.keras import applications
-from tensorflow.keras.models import Model
-from tensorflow.keras import backend as K_B
+from tensorflow.python.keras import applications
+from tensorflow.python.keras.models import Model
+from tensorflow.python.keras import backend as K_B
 
 def variable_summaries(var):
     """

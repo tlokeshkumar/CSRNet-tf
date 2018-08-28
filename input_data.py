@@ -1,9 +1,6 @@
 import tensorflow as tf
 import os
 import numpy as np
-import cv2
-
-batch_size = 1
 
 def parse_records(recordfile):
     feature = {'train/image': tf.FixedLenFeature([], tf.string),

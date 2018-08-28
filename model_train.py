@@ -1,7 +1,7 @@
 import argparse
 import tensorflow as tf
 import numpy as np
-from tensorflow.keras import backend as K_B
+from tensorflow.python.keras import backend as K_B
 from input_data import input_data
 from csrnet import create_full_model,loss_funcs
 from os.path import exists
