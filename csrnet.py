@@ -136,50 +136,31 @@ def backend_D(f, weights = None):
     model = Model(f.input, x, name = "Transfer_learning_model")
     return (model)
 
-def create_full_model(input_images):
+def create_full_model(input_images, c='a'):
     base_model = applications.VGG16(input_tensor=input_images, weights='imagenet', include_top=False, input_shape=(256, 256, 3))
     BOTTLENECK_TENSOR_NAME = 'block4_conv3' # This is the 13th layer in VGG16
 
     f = create_non_trainable_model(base_model, BOTTLENECK_TENSOR_NAME) # Frontend
-    b_a = backend_A(f)
-    b_b = backend_B(f)
-    b_c = backend_C(f)
-    b_d = backend_D(f)
-
-    return b_a,b_b,b_c,b_d
-
-def loss_funcs(b_a,b_b,b_c,b_d,labels):
-    out_A = b_a.output
-    out_B = b_b.output
-    out_C = b_c.output
-    out_D = b_d.output
-    mse_a = tf.losses.mean_squared_error(out_A,labels)
-    mse_b = tf.losses.mean_squared_error(out_B,labels)
-    mse_c = tf.losses.mean_squared_error(out_C,labels)
-    mse_d = tf.losses.mean_squared_error(out_D,labels)
     
-    with tf.name_scope('loss_A'):
-        variable_summaries(mse_a)
+    if c == 'a':
+        b = backend_A(f)
+    if c == 'b':
+        b = backend_B(f)
+    if c == 'c':
+        b = backend_C(f)
+    if c == 'd':
+        b = backend_D(f)
+
+    return b
+
+def loss_funcs(b,labels):
+    out = b.output
+    mse = tf.losses.mean_squared_error(out,labels)
     
-    with tf.name_scope('loss_B'):
-        variable_summaries(mse_b)
-
-    with tf.name_scope('loss_C'):
-        variable_summaries(mse_c)
-
-    with tf.name_scope('loss_D'):
-        variable_summaries(mse_d)
-
-    with tf.name_scope('Predictions_A'):
-        variable_summaries(out_A)
+    with tf.name_scope('loss'):
+        variable_summaries(mse)
     
-    with tf.name_scope('Predictions_B'):
-        variable_summaries(out_B)
-
-    with tf.name_scope('Predictions_C'):
-        variable_summaries(out_A)
-
-    with tf.name_scope('Predictions_D'):
-        variable_summaries(out_A)
-
-    return mse_a,mse_b,mse_c,mse_d
+    with tf.name_scope('Predictions'):
+        variable_summaries(out)
+    
+    return mse

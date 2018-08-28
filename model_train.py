@@ -6,6 +6,7 @@ from input_data import input_data
 from csrnet import create_full_model,loss_funcs
 from os.path import exists
 import coloredlogs
+from colorize import colorize
 
 parser = argparse.ArgumentParser(description="Inputs to the code")
 
@@ -37,18 +38,19 @@ if __name__ == '__main__':
         images,labels = iterator.get_next()
         labels_resized = tf.image.resize_images(labels,[28,28])
 
-        model_A, model_B, model_C ,model_D = create_full_model(images)
+        model_A = create_full_model(images, 'a')
 
-        loss_A, loss_B, loss_C, loss_D = loss_funcs(model_A,model_B,model_C,model_D,labels_resized)
+        tf.summary.image('input-image', images)
+        tf.summary.image('label', tf.map_fn(lambda img: colorize(img, cmap='jet'), labels))
+        tf.summary.image('predict', tf.map_fn(lambda img: colorize(img, cmap='jet'), model_A.output))
+        
+        loss_A = loss_funcs(model_A, labels_resized)
 
         global_step_tensor = tf.train.get_or_create_global_step()
 
         optimizer = tf.train.AdamOptimizer()
         opA = optimizer.minimize(loss_A,global_step=global_step_tensor)
-        opB = optimizer.minimize(loss_B,global_step=global_step_tensor)
-        opC = optimizer.minimize(loss_C,global_step=global_step_tensor)
-        opD = optimizer.minimize(loss_D,global_step=global_step_tensor)        
-
+        
     with K_B.get_session() as sess:
         
         sess.run(init)
