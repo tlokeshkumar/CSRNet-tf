@@ -39,6 +39,8 @@ if __name__ == '__main__':
         labels_resized = tf.image.resize_images(labels,[28,28])
 
         model_A = create_full_model(images, 'a')
+        
+        print (model_A.summary())
 
         tf.summary.image('input-image', images)
         tf.summary.image('label', tf.map_fn(lambda img: colorize(img, cmap='jet'), labels))
@@ -81,7 +83,10 @@ if __name__ == '__main__':
             global_step,_ = sess.run([global_step_tensor,opA],options = runopts)
             out_a = sess.run(model_A.output)
             if global_step%(args.display_step)==0:
-                loss_val = sess.run([loss_A],options = runopts)
+                loss_val, outs = sess.run([loss_A, model_A.get_layer('block4_conv3').output],options = runopts)
+                for i in range(args.batch_size-1):
+                    print (np.all(outs[i]== outs[i+1]))
+                    print (np.all(outs[0] == 0))
                 tf.logging.info('Iteration: ' + str(global_step) + ' Loss: ' +str(loss_val))
             
             if global_step%(args.summary_freq)==0:

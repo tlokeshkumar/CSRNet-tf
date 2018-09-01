@@ -8,7 +8,7 @@ from tensorflow.python.keras.layers import (Activation, AveragePooling2D,
                                             MaxPooling2D, MaxPooling3D,
                                             Reshape, Dropout, concatenate,
 											UpSampling2D)
-from tensorflow.python.keras import applications
+from tensorflow.python.keras import applications, regularizers
 from tensorflow.python.keras.models import Model
 from tensorflow.python.keras import backend as K_B
 
@@ -86,12 +86,12 @@ def preprocess_input(x, data_format=None):
 
 def backend_A(f, weights = None):
 
-    x = Conv2D(512, 3, padding='same', dilation_rate=1, name="dil_A1")(f.output)
-    x = Conv2D(512, 3, padding='same', dilation_rate=1, name="dil_A2")(x)
-    x = Conv2D(512, 3, padding='same', dilation_rate=1, name="dil_A3")(x)
-    x = Conv2D(256, 3, padding='same', dilation_rate=1, name="dil_A4")(x)
-    x = Conv2D(128, 3, padding='same', dilation_rate=1, name="dil_A5")(x)
-    x = Conv2D(64 , 3, padding='same', dilation_rate=1, name="dil_A6")(x)
+    x = Conv2D(512, 3, padding='same', dilation_rate=1,kernel_regularizer=regularizers.l2(0.01),  name="dil_A1")(f.output)
+    x = Conv2D(512, 3, padding='same', dilation_rate=1,kernel_regularizer=regularizers.l2(0.01),  name="dil_A2")(x)
+    x = Conv2D(512, 3, padding='same', dilation_rate=1,kernel_regularizer=regularizers.l2(0.01),  name="dil_A3")(x)
+    x = Conv2D(256, 3, padding='same', dilation_rate=1,kernel_regularizer=regularizers.l2(0.01),  name="dil_A4")(x)
+    x = Conv2D(128, 3, padding='same', dilation_rate=1,kernel_regularizer=regularizers.l2(0.01),  name="dil_A5")(x)
+    x = Conv2D(64 , 3, padding='same', dilation_rate=1,kernel_regularizer=regularizers.l2(0.01),  name="dil_A6")(x)
 
     x = Conv2D(1, 1, padding='same', dilation_rate=1, name="dil_A7")(x)
     model = Model(f.input, x, name = "Transfer_learning_model")
@@ -164,3 +164,16 @@ def loss_funcs(b,labels):
         variable_summaries(out)
     
     return mse
+
+
+if __name__ == '__main__':
+    import numpy as np
+
+    x = tf.placeholder(tf.float32, [None, 224,224,3])
+    m = create_full_model(x, 'a')
+    xhat = np.random.random([2, 224, 224 , 3])
+    init = tf.global_variables_initializer()
+    with K_B.get_session() as sess:
+        sess.run(init)
+        out = sess.run(m.get_layer('block4_conv3').output, feed_dict={x:xhat})
+        print (out[0] == out[1])
