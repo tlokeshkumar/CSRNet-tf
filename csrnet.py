@@ -72,16 +72,20 @@ def preprocess_input(x, data_format=None):
         # 'RGB'->'BGR'
         x = x[::-1, :, :]
         # Zero-center by mean pixel
-        x[0, :, :] -= 103.939
-        x[1, :, :] -= 116.779
-        x[2, :, :] -= 123.68
+        x = x - tf.stack((tf.ones_like(x[0,:, :,:])*tf.constant(103.939),
+                        tf.ones_like(x[1,:, :,:])*tf.constant(116.779)
+                        ,tf.ones_like(x[2,:, :,:])*tf.constant(123.68)),axis=-1)
+    
     else:
         # 'RGB'->'BGR'
         x = x[ :, :, ::-1]
         # Zero-center by mean pixel
-        x[:, :, 0] -= 103.939
-        x[:, :, 1] -= 116.779
-        x[:, :, 2] -= 123.68
+        x = x - tf.stack((tf.ones_like(x[:,:,:,0])*tf.constant(103.939),
+                        tf.ones_like(x[:,:,:,1])*tf.constant(116.779)
+                        ,tf.ones_like(x[:,:,:,2])*tf.constant(123.68)),axis=-1)
+    
+    x = 2*x/255
+
     return x
 
 def backend_A(f, weights = None):
@@ -137,6 +141,7 @@ def backend_D(f, weights = None):
     return (model)
 
 def create_full_model(input_images, c='a'):
+    input_images = preprocess_input(input_images)
     base_model = applications.VGG16(input_tensor=input_images, weights='imagenet', include_top=False, input_shape=(256, 256, 3))
     BOTTLENECK_TENSOR_NAME = 'block4_conv3' # This is the 13th layer in VGG16
 
@@ -154,7 +159,7 @@ def create_full_model(input_images, c='a'):
     return b
 
 def loss_funcs(b,labels):
-    out = b.output
+    out = tf.image.resize_images(b.output,[224,224])
     mse = tf.losses.mean_squared_error(out,labels)
     
     with tf.name_scope('loss'):

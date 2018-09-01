@@ -36,15 +36,15 @@ if __name__ == '__main__':
     
         iterator = input_data(TFRecord_file,batch_size=args.batch_size)
         images,labels = iterator.get_next()
-        labels_resized = tf.image.resize_images(labels,[28,28])
+        # labels_resized = tf.image.resize_images(labels,[28,28])
 
         model_A = create_full_model(images, 'a')
 
         tf.summary.image('input-image', images)
         tf.summary.image('label', tf.map_fn(lambda img: colorize(img, cmap='jet'), labels))
-        tf.summary.image('predict', tf.map_fn(lambda img: colorize(img, cmap='jet'), model_A.output))
+        tf.summary.image('predict', tf.map_fn(lambda img: colorize(img, cmap='jet'), tf.image.resize_images(model_A.output,[224,224])))
         
-        loss_A = loss_funcs(model_A, labels_resized)
+        loss_A = loss_funcs(model_A, labels)
 
         global_step_tensor = tf.train.get_or_create_global_step()
 
@@ -79,7 +79,10 @@ if __name__ == '__main__':
         while True:    
         # Training Iterations Begin
             global_step,_ = sess.run([global_step_tensor,opA],options = runopts)
-            out_a = sess.run(model_A.output)
+            out_a, in_a, vgg = sess.run([model_A.output, images ,model_A.get_layer('block4_conv3').output])
+            print(np.mean(np.reshape(out_a, (-1, 28*28)),axis=1))
+            print (np.mean(np.reshape(in_a, (-1,224*224*3)), axis=1))
+            print (np.mean(np.reshape(vgg, (8, -1)), axis=1))
             if global_step%(args.display_step)==0:
                 loss_val = sess.run([loss_A],options = runopts)
                 tf.logging.info('Iteration: ' + str(global_step) + ' Loss: ' +str(loss_val))
@@ -91,6 +94,6 @@ if __name__ == '__main__':
             
             if global_step%(args.save_freq)==0:
                 saver.save(sess,args.ckpt_savedir,global_step=tf.train.get_global_step())
-            
+
             if np.floor(global_step/no_iter_per_epoch) == args.no_epochs:
                 break
