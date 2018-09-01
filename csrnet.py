@@ -99,11 +99,16 @@ def backend_A(f, weights = None):
 
 def backend_B(f, weights = None):
     
-    x = Conv2D(512, 3, padding='same', dilation_rate=2, name="dil_B1")(f.output)
-    x = Conv2D(512, 3, padding='same', dilation_rate=2, name="dil_B2")(x)
-    x = Conv2D(512, 3, padding='same', dilation_rate=2, name="dil_B3")(x)
-    x = Conv2D(256, 3, padding='same', dilation_rate=2, name="dil_B4")(x)
-    x = Conv2D(128, 3, padding='same', dilation_rate=2, name="dil_B5")(x)
+    x = Conv2D(512, 3, padding='same', dilation_rate=2,kernel_regularizer=regularizers.l2(0.01), name="dil_B1")(f.output)
+    x = BatchNormalization(name='bn_b1')(x)
+    x = Conv2D(512, 3, padding='same', dilation_rate=2, kernel_regularizer=regularizers.l2(0.01),name="dil_B2")(x)
+    x = BatchNormalization(name='bn_b2')(x)
+    x = Conv2D(512, 3, padding='same', dilation_rate=2, kernel_regularizer=regularizers.l2(0.01),name="dil_B3")(x)
+    x = BatchNormalization(name='bn_b3')(x)
+    x = Conv2D(256, 3, padding='same', dilation_rate=2,kernel_regularizer=regularizers.l2(0.01), name="dil_B4")(x)
+    x = BatchNormalization(name='bn_b4')(x)
+    x = Conv2D(128, 3, padding='same', dilation_rate=2, kernel_regularizer=regularizers.l2(0.01),name="dil_B5")(x)
+    x = BatchNormalization(name='bn_b5')(x)
     x = Conv2D(64 , 3, padding='same', dilation_rate=2, name="dil_B6")(x)
     
     x = Conv2D(1, 1, padding='same', dilation_rate=1,   name="dil_B7")(x)

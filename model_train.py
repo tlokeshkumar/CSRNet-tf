@@ -22,7 +22,9 @@ parser.add_argument("--no_epochs",type=int,default=10,help="number of epochs for
 
 args = parser.parse_args()
 no_iter_per_epoch = np.ceil(300/args.batch_size)
-
+img_rows = 256
+img_cols = 256
+fac = 8
 TFRecord_file = args.input_record_file
 
 if __name__ == '__main__':
@@ -36,9 +38,9 @@ if __name__ == '__main__':
     
         iterator = input_data(TFRecord_file,batch_size=args.batch_size)
         images,labels = iterator.get_next()
-        labels_resized = tf.image.resize_images(labels,[28,28])
+        labels_resized = tf.image.resize_images(labels,[img_rows//fac, img_cols//fac])
 
-        model_A = create_full_model(images, 'a')
+        model_A = create_full_model(images, 'b')
         
         print (model_A.summary())
 
@@ -50,7 +52,7 @@ if __name__ == '__main__':
 
         global_step_tensor = tf.train.get_or_create_global_step()
 
-        optimizer = tf.train.AdamOptimizer()
+        optimizer = tf.train.AdamOptimizer(learning_rate=1e-6)
         opA = optimizer.minimize(loss_A,global_step=global_step_tensor)
         
     with K_B.get_session() as sess:
@@ -83,10 +85,7 @@ if __name__ == '__main__':
             global_step,_ = sess.run([global_step_tensor,opA],options = runopts)
             out_a = sess.run(model_A.output)
             if global_step%(args.display_step)==0:
-                loss_val, outs = sess.run([loss_A, model_A.get_layer('block4_conv3').output],options = runopts)
-                for i in range(args.batch_size-1):
-                    print (np.all(outs[i]== outs[i+1]))
-                    print (np.all(outs[0] == 0))
+                loss_val = sess.run([loss_A],options = runopts)
                 tf.logging.info('Iteration: ' + str(global_step) + ' Loss: ' +str(loss_val))
             
             if global_step%(args.summary_freq)==0:
