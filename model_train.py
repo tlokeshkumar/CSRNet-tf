@@ -14,14 +14,14 @@ parser.add_argument("--input_record_file",type=str,help="path to TFRecord file w
 parser.add_argument("--batch_size",type=int,default=16,help="Batch Size")
 parser.add_argument("--log_directory",type = str,default='./log_dir',help="path to tensorboard log")
 parser.add_argument("--ckpt_savedir",type = str,default='./checkpoints/model_ckpt',help="path to save checkpoints")
-parser.add_argument("--load_ckpt",type = str,default=None,help="path to load checkpoints from")
+parser.add_argument("--load_ckpt",type = str,default='./checkpoints',help="path to load checkpoints from")
 parser.add_argument("--save_freq",type = int,default=100,help="save frequency")
 parser.add_argument("--display_step",type = int,default=1,help="display frequency")
 parser.add_argument("--summary_freq",type = int,default=100,help="summary writer frequency")
 parser.add_argument("--no_epochs",type=int,default=10,help="number of epochs for training")
 
 args = parser.parse_args()
-no_iter_per_epoch = np.ceil(300/args.batch_size)
+no_iter_per_epoch = np.ceil(30000/args.batch_size)
 img_rows = 256
 img_cols = 256
 fac = 8
