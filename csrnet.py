@@ -84,20 +84,26 @@ def preprocess_input(x, data_format=None):
                         tf.ones_like(x[:,:,:,1])*tf.constant(116.779)
                         ,tf.ones_like(x[:,:,:,2])*tf.constant(123.68)),axis=-1)
     
-    x = 2*x/255
+    # x = 2*x/255
 
     return x
 
 def backend_A(f, weights = None):
 
     x = Conv2D(512, 3, padding='same', dilation_rate=1, name="dil_A1")(f.output)
+    x = Activation('relu')(x)
     x = Conv2D(512, 3, padding='same', dilation_rate=1, name="dil_A2")(x)
+    x = Activation('relu')(x)
     x = Conv2D(512, 3, padding='same', dilation_rate=1, name="dil_A3")(x)
+    x = Activation('relu')(x)
     x = Conv2D(256, 3, padding='same', dilation_rate=1, name="dil_A4")(x)
+    x = Activation('relu')(x)
     x = Conv2D(128, 3, padding='same', dilation_rate=1, name="dil_A5")(x)
+    x = Activation('relu')(x)
     x = Conv2D(64 , 3, padding='same', dilation_rate=1, name="dil_A6")(x)
-
+    x = Activation('relu')(x)
     x = Conv2D(1, 1, padding='same', dilation_rate=1, name="dil_A7")(x)
+
     model = Model(f.input, x, name = "Transfer_learning_model")
     return (model)
 
