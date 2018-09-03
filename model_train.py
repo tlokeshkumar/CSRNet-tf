@@ -39,7 +39,12 @@ if __name__ == '__main__':
         iterator = input_data(TFRecord_file,batch_size=args.batch_size)
         images,labels = iterator.get_next()
         labels_resized = tf.image.resize_images(labels,[img_rows//fac, img_cols//fac])
+<<<<<<< HEAD
         model_B = create_full_model(images, 'b')
+=======
+
+        model_A = create_full_model(images, 'b')
+>>>>>>> ebdf3b01d7b50177695d223353f3bc67571b6395
         
         print (model_B.summary())
 
