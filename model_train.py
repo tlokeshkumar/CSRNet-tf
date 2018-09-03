@@ -14,15 +14,17 @@ parser.add_argument("--input_record_file",type=str,help="path to TFRecord file w
 parser.add_argument("--batch_size",type=int,default=16,help="Batch Size")
 parser.add_argument("--log_directory",type = str,default='./log_dir',help="path to tensorboard log")
 parser.add_argument("--ckpt_savedir",type = str,default='./checkpoints/model_ckpt',help="path to save checkpoints")
-parser.add_argument("--load_ckpt",type = str,default=None,help="path to load checkpoints from")
+parser.add_argument("--load_ckpt",type = str,default='./checkpoints',help="path to load checkpoints from")
 parser.add_argument("--save_freq",type = int,default=100,help="save frequency")
 parser.add_argument("--display_step",type = int,default=1,help="display frequency")
 parser.add_argument("--summary_freq",type = int,default=100,help="summary writer frequency")
 parser.add_argument("--no_epochs",type=int,default=10,help="number of epochs for training")
 
 args = parser.parse_args()
-no_iter_per_epoch = np.ceil(300/args.batch_size)
-
+no_iter_per_epoch = np.ceil(30000/args.batch_size)
+img_rows = 256
+img_cols = 256
+fac = 8
 TFRecord_file = args.input_record_file
 
 if __name__ == '__main__':
@@ -36,9 +38,15 @@ if __name__ == '__main__':
     
         iterator = input_data(TFRecord_file,batch_size=args.batch_size)
         images,labels = iterator.get_next()
+<<<<<<< HEAD
         # labels_resized = tf.image.resize_images(labels,[28,28])
+=======
+        labels_resized = tf.image.resize_images(labels,[img_rows//fac, img_cols//fac])
+>>>>>>> 4312010ee9a939a0ce78bb30e9ddf22c82583e42
 
-        model_A = create_full_model(images, 'a')
+        model_A = create_full_model(images, 'b')
+        
+        print (model_A.summary())
 
         tf.summary.image('input-image', images)
         tf.summary.image('label', tf.map_fn(lambda img: colorize(img, cmap='jet'), labels))
@@ -48,7 +56,7 @@ if __name__ == '__main__':
 
         global_step_tensor = tf.train.get_or_create_global_step()
 
-        optimizer = tf.train.AdamOptimizer()
+        optimizer = tf.train.AdamOptimizer(learning_rate=1e-6)
         opA = optimizer.minimize(loss_A,global_step=global_step_tensor)
         
     with K_B.get_session() as sess:

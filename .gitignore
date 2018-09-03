@@ -1,0 +1,5 @@
+log_dir
+checkpoints
+ShanghaiTech_Crowd_Counting_Dataset
+__pycache__
+*.tfrecords
