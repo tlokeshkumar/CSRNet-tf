@@ -38,11 +38,7 @@ if __name__ == '__main__':
     
         iterator = input_data(TFRecord_file,batch_size=args.batch_size)
         images,labels = iterator.get_next()
-<<<<<<< HEAD
-        # labels_resized = tf.image.resize_images(labels,[28,28])
-=======
         labels_resized = tf.image.resize_images(labels,[img_rows//fac, img_cols//fac])
->>>>>>> 4312010ee9a939a0ce78bb30e9ddf22c82583e42
 
         model_A = create_full_model(images, 'b')
         
@@ -88,9 +84,6 @@ if __name__ == '__main__':
         # Training Iterations Begin
             global_step,_ = sess.run([global_step_tensor,opA],options = runopts)
             out_a, in_a, vgg = sess.run([model_A.output, images ,model_A.get_layer('block4_conv3').output])
-            print(np.mean(np.reshape(out_a, (-1, 28*28)),axis=1))
-            print (np.mean(np.reshape(in_a, (-1,224*224*3)), axis=1))
-            print (np.mean(np.reshape(vgg, (8, -1)), axis=1))
             if global_step%(args.display_step)==0:
                 loss_val = sess.run([loss_A],options = runopts)
                 tf.logging.info('Iteration: ' + str(global_step) + ' Loss: ' +str(loss_val))

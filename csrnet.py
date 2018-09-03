@@ -128,12 +128,12 @@ def backend_B(f, weights = None):
 
 def backend_C(f, weights = None):
 
-    x = Conv2D(512, 3, padding='same', dilation_rate=2, name="dil_C1")(f.output)
-    x = Conv2D(512, 3, padding='same', dilation_rate=2, name="dil_C2")(x)
-    x = Conv2D(512, 3, padding='same', dilation_rate=2, name="dil_C3")(x)
-    x = Conv2D(256, 3, padding='same', dilation_rate=4, name="dil_C4")(x)
-    x = Conv2D(128, 3, padding='same', dilation_rate=4, name="dil_C5")(x)
-    x = Conv2D(64 , 3, padding='same', dilation_rate=4, name="dil_C6")(x)
+    x = Conv2D(512, 3, padding='same', dilation_rate=2,activation='relu', name="dil_C1")(f.output)
+    x = Conv2D(512, 3, padding='same', dilation_rate=2,activation='relu', name="dil_C2")(x)
+    x = Conv2D(512, 3, padding='same', dilation_rate=2,activation='relu', name="dil_C3")(x)
+    x = Conv2D(256, 3, padding='same', dilation_rate=4,activation='relu', name="dil_C4")(x)
+    x = Conv2D(128, 3, padding='same', dilation_rate=4,activation='relu', name="dil_C5")(x)
+    x = Conv2D(64 , 3, padding='same', dilation_rate=4,activation='relu', name="dil_C6")(x)
 
     x = Conv2D(1, 1, padding='same', dilation_rate=1, name="dil_C7")(x)
     model = Model(f.input, x, name = "Transfer_learning_model")
@@ -141,12 +141,12 @@ def backend_C(f, weights = None):
 
 def backend_D(f, weights = None):
 
-    x = Conv2D(512, 3, padding='same', dilation_rate=4 , name="dil_D1")(f.output)
-    x = Conv2D(512, 3, padding='same', dilation_rate=4 , name="dil_D2")(x)
-    x = Conv2D(512, 3, padding='same', dilation_rate=4 , name="dil_D3")(x)
-    x = Conv2D(256, 3, padding='same', dilation_rate=4 , name="dil_D4")(x)
-    x = Conv2D(128, 3, padding='same', dilation_rate=4 , name="dil_D5")(x)
-    x = Conv2D(64 , 3, padding='same', dilation_rate=4 , name="dil_D6")(x)
+    x = Conv2D(512, 3, padding='same', dilation_rate=4 ,activation='relu', name="dil_D1")(f.output)
+    x = Conv2D(512, 3, padding='same', dilation_rate=4 ,activation='relu', name="dil_D2")(x)
+    x = Conv2D(512, 3, padding='same', dilation_rate=4 ,activation='relu', name="dil_D3")(x)
+    x = Conv2D(256, 3, padding='same', dilation_rate=4 ,activation='relu', name="dil_D4")(x)
+    x = Conv2D(128, 3, padding='same', dilation_rate=4 ,activation='relu', name="dil_D5")(x)
+    x = Conv2D(64 , 3, padding='same', dilation_rate=4 ,activation='relu', name="dil_D6")(x)
 
     x = Conv2D(1, 1, padding='same', dilation_rate=1, name="dil_D7")(x)
     model = Model(f.input, x, name = "Transfer_learning_model")
@@ -171,7 +171,8 @@ def create_full_model(input_images, c='a'):
     return b
 
 def loss_funcs(b,labels):
-    out = tf.image.resize_images(b.output,[224,224])
+
+    out = tf.image.resize_images(b.output,labels.get_shape()[1:-1])
     mse = tf.losses.mean_squared_error(out,labels)
     
     with tf.name_scope('loss'):
