@@ -22,8 +22,8 @@ parser.add_argument("--no_epochs",type=int,default=10,help="number of epochs for
 
 args = parser.parse_args()
 no_iter_per_epoch = np.ceil(30000/args.batch_size)
-img_rows = 256
-img_cols = 256
+img_rows = 224
+img_cols = 224
 fac = 8
 TFRecord_file = args.input_record_file
 
@@ -38,26 +38,20 @@ if __name__ == '__main__':
     
         iterator = input_data(TFRecord_file,batch_size=args.batch_size)
         images,labels = iterator.get_next()
-<<<<<<< HEAD
-        # labels_resized = tf.image.resize_images(labels,[28,28])
-=======
         labels_resized = tf.image.resize_images(labels,[img_rows//fac, img_cols//fac])
->>>>>>> 4312010ee9a939a0ce78bb30e9ddf22c82583e42
-
-        model_A = create_full_model(images, 'b')
+        model_B = create_full_model(images, 'b')
         
-        print (model_A.summary())
+        print (model_B.summary())
 
         tf.summary.image('input-image', images)
         tf.summary.image('label', tf.map_fn(lambda img: colorize(img, cmap='jet'), labels))
-        tf.summary.image('predict', tf.map_fn(lambda img: colorize(img, cmap='jet'), tf.image.resize_images(model_A.output,[224,224])))
-        
-        loss_A = loss_funcs(model_A, labels)
+        tf.summary.image('predict', tf.map_fn(lambda img: colorize(img, cmap='jet'), tf.image.resize_images(model_B.output,[224,224])))
+        loss_B = loss_funcs(model_B, labels)
 
         global_step_tensor = tf.train.get_or_create_global_step()
 
         optimizer = tf.train.AdamOptimizer(learning_rate=1e-6)
-        opA = optimizer.minimize(loss_A,global_step=global_step_tensor)
+        opB = optimizer.minimize(loss_B,global_step=global_step_tensor)
         
     with K_B.get_session() as sess:
         
@@ -86,13 +80,9 @@ if __name__ == '__main__':
 
         while True:    
         # Training Iterations Begin
-            global_step,_ = sess.run([global_step_tensor,opA],options = runopts)
-            out_a, in_a, vgg = sess.run([model_A.output, images ,model_A.get_layer('block4_conv3').output])
-            print(np.mean(np.reshape(out_a, (-1, 28*28)),axis=1))
-            print (np.mean(np.reshape(in_a, (-1,224*224*3)), axis=1))
-            print (np.mean(np.reshape(vgg, (8, -1)), axis=1))
+            global_step,_ = sess.run([global_step_tensor,opB],options = runopts)
             if global_step%(args.display_step)==0:
-                loss_val = sess.run([loss_A],options = runopts)
+                loss_val = sess.run([loss_B],options = runopts)
                 tf.logging.info('Iteration: ' + str(global_step) + ' Loss: ' +str(loss_val))
             
             if global_step%(args.summary_freq)==0:
