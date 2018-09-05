@@ -22,8 +22,8 @@ parser.add_argument("--no_epochs",type=int,default=10,help="number of epochs for
 
 args = parser.parse_args()
 no_iter_per_epoch = np.ceil(30000/args.batch_size)
-img_rows = 256
-img_cols = 256
+img_rows = 512
+img_cols = 512
 fac = 8
 TFRecord_file = args.input_record_file
 
@@ -51,9 +51,11 @@ if __name__ == '__main__':
         loss_A = loss_funcs(model_A, labels)
 
         global_step_tensor = tf.train.get_or_create_global_step()
-
+        vars_encoder = [var for var in tf.trainable_variables() if var.name.startswith("dil")]
+        for i in vars_encoder:
+            tf.logging.info("Training only variables in: " + str(i))
         optimizer = tf.train.AdamOptimizer(learning_rate=1e-6)
-        opA = optimizer.minimize(loss_A,global_step=global_step_tensor)
+        opA = optimizer.minimize(loss_A,global_step=global_step_tensor, var_list=vars_encoder)
         
     with K_B.get_session() as sess:
         

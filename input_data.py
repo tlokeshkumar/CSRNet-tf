@@ -2,8 +2,8 @@ import tensorflow as tf
 import os
 import numpy as np
 import random
-img_rows = 256
-img_cols = 256
+img_rows = 512
+img_cols = 512
 fac = 8
 def _corrupt_brightness(image, mask):
     """Radnomly applies a random brightness change."""
