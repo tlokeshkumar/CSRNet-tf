@@ -39,23 +39,25 @@ if __name__ == '__main__':
         iterator = input_data(TFRecord_file,batch_size=args.batch_size)
         images,labels = iterator.get_next()
         labels_resized = tf.image.resize_images(labels,[img_rows//fac, img_cols//fac])
-
-        model_A = create_full_model(images, 'b')
+        model_B = create_full_model(images, 'b')
         
-        print (model_A.summary())
+        print (model_B.summary())
 
         tf.summary.image('input-image', images)
         tf.summary.image('label', tf.map_fn(lambda img: colorize(img, cmap='jet'), labels))
-        tf.summary.image('predict', tf.map_fn(lambda img: colorize(img, cmap='jet'), tf.image.resize_images(model_A.output,[224,224])))
-        
-        loss_A = loss_funcs(model_A, labels)
+        tf.summary.image('predict', tf.map_fn(lambda img: colorize(img, cmap='jet'), tf.image.resize_images(model_B.output,[224,224])))
+        loss_B = loss_funcs(model_B, labels)
 
         global_step_tensor = tf.train.get_or_create_global_step()
         vars_encoder = [var for var in tf.trainable_variables() if var.name.startswith("dil")]
         for i in vars_encoder:
             tf.logging.info("Training only variables in: " + str(i))
         optimizer = tf.train.AdamOptimizer(learning_rate=1e-6)
+<<<<<<< HEAD
         opA = optimizer.minimize(loss_A,global_step=global_step_tensor, var_list=vars_encoder)
+=======
+        opB = optimizer.minimize(loss_B,global_step=global_step_tensor)
+>>>>>>> 7952acaa234ba84ddc616cc82e9b3560c88ae96c
         
     with K_B.get_session() as sess:
         
@@ -84,10 +86,9 @@ if __name__ == '__main__':
 
         while True:    
         # Training Iterations Begin
-            global_step,_ = sess.run([global_step_tensor,opA],options = runopts)
-            out_a, in_a, vgg = sess.run([model_A.output, images ,model_A.get_layer('block4_conv3').output])
+            global_step,_ = sess.run([global_step_tensor,opB],options = runopts)
             if global_step%(args.display_step)==0:
-                loss_val = sess.run([loss_A],options = runopts)
+                loss_val = sess.run([loss_B],options = runopts)
                 tf.logging.info('Iteration: ' + str(global_step) + ' Loss: ' +str(loss_val))
             
             if global_step%(args.summary_freq)==0:

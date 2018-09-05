@@ -180,8 +180,7 @@ def create_full_model(input_images, c='a'):
     return b
 
 def loss_funcs(b,labels):
-
-    out = tf.image.resize_images(b.output,labels.get_shape()[1:-1])
+    out = b.output
     mse = tf.losses.mean_squared_error(out,labels)
     
     with tf.name_scope('loss'):
