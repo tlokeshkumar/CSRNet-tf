@@ -9,7 +9,7 @@ from tensorflow.python.keras.layers import (Activation, AveragePooling2D,
                                             Reshape, Dropout, concatenate,
 											UpSampling2D)
 from tensorflow.python.keras import applications, regularizers
-from tensorflow.python.keras.models import Model
+from tensorflow.python.keras.models import Model, Sequential
 from tensorflow.python.keras import backend as K_B
 
 def variable_summaries(var):
@@ -47,11 +47,17 @@ def create_non_trainable_model(base_model, BOTTLENECK_TENSOR_NAME, use_global_av
     arent created, then this network is trained. So please use accordingly.
     '''
     # This post-processing of the deep neural network is to avoid memory errors
-    x = (base_model.get_layer(BOTTLENECK_TENSOR_NAME).output)
-    non_trainable_model = Model(inputs = base_model.input, outputs = [x])
+    x = (base_model.get_layer(BOTTLENECK_TENSOR_NAME))
+    all_layers = base_model.layers
+    for i in range(base_model.layers.index(x)):
+        all_layers[i].trainable = False
+    mid_out = base_model.layers[base_model.layers.index(x)]
+    variable_summaries(mid_out.output)
+    non_trainable_model = Model(base_model.input, mid_out.output)
+    #non_trainable_model = Model(inputs = base_model.input, outputs = [x])
     
-    for layer in non_trainable_model.layers:
-        layer.trainable = False
+    # for layer in non_trainable_model.layers:
+    #     layer.trainable = False
     
     return (non_trainable_model)
 def preprocess_input(x, data_format=None):
@@ -90,7 +96,9 @@ def preprocess_input(x, data_format=None):
 
 def backend_A(f, weights = None):
 
-    x = Conv2D(512, 3, padding='same', dilation_rate=1,kernel_regularizer=regularizers.l2(0.01),  name="dil_A1")(f.output)
+    
+
+    x = Conv2D(512, 3, padding='same', dilation_rate=1,kernel_regularizer=regularizers.l2(0.01),  name="dil_A1")(model.output)
     x = Activation('relu')(x)
     x = Conv2D(512, 3, padding='same', dilation_rate=1,kernel_regularizer=regularizers.l2(0.01),  name="dil_A2")(x)
     x = Activation('relu')(x)
@@ -110,16 +118,17 @@ def backend_A(f, weights = None):
 
 def backend_B(f, weights = None):
     
-    x = Conv2D(512, 3, padding='same', dilation_rate=2,kernel_regularizer=regularizers.l2(0.01), activation = 'relu', name="dil_B1")(f.output)
-    x = BatchNormalization(name='bn_b1')(x)
-    x = Conv2D(512, 3, padding='same', dilation_rate=2, kernel_regularizer=regularizers.l2(0.01),activation = 'relu',name="dil_B2")(x)
-    x = BatchNormalization(name='bn_b2')(x)
-    x = Conv2D(512, 3, padding='same', dilation_rate=2, kernel_regularizer=regularizers.l2(0.01),activation = 'relu',name="dil_B3")(x)
-    x = BatchNormalization(name='bn_b3')(x)
-    x = Conv2D(256, 3, padding='same', dilation_rate=2,kernel_regularizer=regularizers.l2(0.01), activation = 'relu',name="dil_B4")(x)
-    x = BatchNormalization(name='bn_b4')(x)
-    x = Conv2D(128, 3, padding='same', dilation_rate=2, kernel_regularizer=regularizers.l2(0.01),activation = 'relu',name="dil_B5")(x)
-    x = BatchNormalization(name='bn_b5')(x)
+    
+    x = Conv2D(512, 3, padding='same', dilation_rate=2, activation = 'relu', name="dil_B1")(f.output)
+    # x = BatchNormalization(name='bn_b1')(x)
+    x = Conv2D(512, 3, padding='same', dilation_rate=2,activation = 'relu',name="dil_B2")(x)
+    # x = BatchNormalization(name='bn_b2')(x)
+    x = Conv2D(512, 3, padding='same', dilation_rate=2,activation = 'relu',name="dil_B3")(x)
+    # x = BatchNormalization(name='bn_b3')(x)
+    x = Conv2D(256, 3, padding='same', dilation_rate=2, activation = 'relu',name="dil_B4")(x)
+    # x = BatchNormalization(name='bn_b4')(x)
+    x = Conv2D(128, 3, padding='same', dilation_rate=2, activation = 'relu',name="dil_B5")(x)
+    # x = BatchNormalization(name='bn_b5')(x)
     x = Conv2D(64 , 3, padding='same', dilation_rate=2, activation = 'relu',name="dil_B6")(x)
     
     x = Conv2D(1, 1, padding='same', dilation_rate=1,   name="dil_B7")(x)
